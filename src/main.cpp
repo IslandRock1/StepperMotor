@@ -1,9 +1,11 @@
 #include <Arduino.h>
+#include <OneWire.h>
 #include <array>
 
 #include "stepper.h"
 #include "timerStats.hpp"
 
+OneWire oneWire(13);
 
 Stepper stepper{26, 27, 32, 33, 34};
 TimerStats timerStats;
@@ -25,26 +27,19 @@ void push_back(bool e) {
     activations[activations.size() - 1] = e;
 }
 
-State compare() {
+State compare(byte data) {
+    switch (data) {
+        case 1:
+        {
+            return State::Clockwise;
+        } break;
 
-    int val = 0;
-    for (auto &e : activations) {
-        val *= 10;
-        val += e;
-    }
-
-    switch (val) {
-        case 11010:
+        case 2:
         {
             return State::Double;
         } break;
 
-        case 10100:
-        {
-            return State::Clockwise;
-        }
-
-        case 10011:
+        case 3:
         {
             return State::AntiClockwise;
         } break;
@@ -60,19 +55,18 @@ void setup() {
     Serial.begin(9600);
     Serial.println();
     Serial.println("Serial configured.");
-
-    pinMode(13, INPUT);
 }
 
 void loop() {
-    // timerStats.startTimer();
 
-    if (millis() % 10 != 0) {
+    byte data;
+    if (oneWire.reset()) {
+        data = oneWire.read();
+    } else {
         return;
     }
 
-    push_back(digitalRead(13));
-    auto s = compare();
+    auto s = compare(data);
 
     if (s != State::OFF) {
         activations = {false, false, false, false, false};
