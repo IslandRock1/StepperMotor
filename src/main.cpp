@@ -2,9 +2,13 @@
 #include <array>
 
 #include "stepper.h"
+#include "timerStats.hpp"
+
 
 Stepper stepper{26, 27, 32, 33, 34};
+TimerStats timerStats;
 std::array<bool, 5> activations;
+
 
 enum State {
     OFF,
@@ -61,16 +65,18 @@ void setup() {
 }
 
 void loop() {
-    if (millis() % 10 == 0) {
-        push_back(digitalRead(13));
-    } else {
+    timerStats.startTimer();
+
+    if (millis() % 10 != 0) {
         return;
     }
 
+    push_back(digitalRead(13));
     auto s = compare();
 
     if (s != State::OFF) {
         activations = {false, false, false, false, false};
+        Serial.println("State is not off.");
     }
 
     switch (s) {
