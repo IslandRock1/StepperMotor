@@ -65,7 +65,7 @@ void setup() {
 }
 
 void loop() {
-    timerStats.startTimer();
+    // timerStats.startTimer();
 
     if (millis() % 10 != 0) {
         return;
