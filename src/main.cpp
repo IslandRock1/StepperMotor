@@ -62,16 +62,13 @@ void loop() {
     byte data;
     if (oneWire.reset()) {
         data = oneWire.read();
+        Serial.print("Reading data: ");
+        Serial.println(data);
     } else {
         return;
     }
 
     auto s = compare(data);
-
-    if (s != State::OFF) {
-        activations = {false, false, false, false, false};
-        Serial.println("State is not off.");
-    }
 
     switch (s) {
         case State::Clockwise:
