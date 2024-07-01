@@ -11,7 +11,7 @@ public:
     Stepper(int pin0, int pin1, int pin2, int pin3, int enable);
     void turnQuart(bool forward);
     void turnHalf();
-    void step(bool forward);
+    void turnSteps(int num, bool dir);
 
 private:
     int pin0;
@@ -22,6 +22,8 @@ private:
 
     int currentStep = 0;
     int pauseTime = 10;
+
+    void step(bool forward);
 };
 
 
