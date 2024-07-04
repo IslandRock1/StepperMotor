@@ -16,8 +16,17 @@ typedef struct StepperData {
 
 StepperData myData;
 
-void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     memcpy(&myData, incomingData, sizeof(myData));
+
+    if (myData.version != 0) {
+        Serial.println("Wrong ESP_NOW version. main.cpp/OnDataRecv");
+    }
+
+    if (myData.motorID != 0) {
+        Serial.println("Turning different motor.");
+        return;
+    }
 
     byte data = myData.data;
     bool dir = data >> 7;
@@ -32,7 +41,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 }
 
 void setup() {
-    Serial.begin(9600);
+    Serial.begin(115200);
     Serial.println();
     Serial.println("Serial configured.");
 
