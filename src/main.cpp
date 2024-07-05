@@ -23,16 +23,16 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
         Serial.println("Wrong ESP_NOW version. main.cpp/OnDataRecv");
     }
 
-    if (myData.motorID != 0) {
+    if (myData.motorID != 5) {
         Serial.println("Turning different motor.");
         return;
     }
 
     byte data = myData.data;
-    bool dir = data >> 7;
-    byte steps = data & 0b011111;
+    bool dir = (data >> 7) == 1;
+    byte steps = data & 0b01111111;
 
-    Serial.print("ID: ");
+    Serial.print("Dir: ");
     Serial.print(dir);
     Serial.print(" | Steps: ");
     Serial.println(steps);

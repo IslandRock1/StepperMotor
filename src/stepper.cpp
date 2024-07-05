@@ -20,13 +20,13 @@ void Stepper::step(bool forward) {
 
     if (forward) {
         currentStep++;
-        if (currentStep == 16) {
+        if (currentStep == 4) {
             currentStep = 0;
         }
     } else {
         currentStep--;
         if (currentStep == -1) {
-            currentStep = 15;
+            currentStep = 3;
         }
     }
 
@@ -85,7 +85,7 @@ void Stepper::turnHalf() {
 }
 
 void Stepper::turnSteps(int num, bool dir) {
-    for (int w = 0; w < dir; w++) {
+    for (int w = 0; w < num; w++) {
         step(dir);
         delay(pauseTime);
     }
