@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <esp_now.h>
+#include <esp_wifi.h>
 
 #include "stepper.h"
 #include "timerStats.hpp"
@@ -40,12 +41,14 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     stepper.turnSteps(steps, dir);
 }
 
+uint8_t baseMac[6];
 void setup() {
     Serial.begin(115200);
     Serial.println();
     Serial.println("Serial configured.");
 
     WiFi.mode(WIFI_STA);
+    esp_err_t ret = esp_wifi_get_mac(WIFI_IF_STA, baseMac);
 
     if (esp_now_init() != ESP_OK) {
         Serial.println("Error with ESP Now.");
@@ -55,6 +58,13 @@ void setup() {
     }
 }
 
+unsigned long prevPrintTime = millis();
 void loop() {
+    if (prevPrintTime + 500 < millis()) {
+        prevPrintTime = millis();
 
+        Serial.printf("%02x:%02x:%02x:%02x:%02x:%02x\n",
+                      baseMac[0], baseMac[1], baseMac[2],
+                      baseMac[3], baseMac[4], baseMac[5]);
+    }
 }
