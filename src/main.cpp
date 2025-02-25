@@ -8,6 +8,7 @@
 
 Stepper stepper{26, 27, 32, 33, 34};
 TimerStats timerStats;
+int myID = 2;
 
 typedef struct StepperData {
     byte version;
@@ -24,7 +25,7 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
         Serial.println("Wrong ESP_NOW version. main.cpp/OnDataRecv");
     }
 
-    if (myData.motorID != 5) {
+    if (myData.motorID != myID) {
         Serial.println("Turning different motor.");
         return;
     }
@@ -66,5 +67,8 @@ void loop() {
         Serial.printf("%02x:%02x:%02x:%02x:%02x:%02x\n",
                       baseMac[0], baseMac[1], baseMac[2],
                       baseMac[3], baseMac[4], baseMac[5]);
+
+        Serial.print("ID: ");
+        Serial.println(myID);
     }
 }
