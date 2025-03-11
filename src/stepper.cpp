@@ -12,8 +12,11 @@ Stepper::Stepper(int pin0, int pin1, int pin2, int pin3, int enable)
     pinMode(pin1, OUTPUT);
     pinMode(pin2, OUTPUT);
     pinMode(pin3, OUTPUT);
-    pinMode(enablePin, OUTPUT);
-    digitalWrite(enablePin, HIGH);
+
+    if (enablePin != 0) {
+        pinMode(enablePin, OUTPUT);
+        digitalWrite(enablePin, HIGH);
+    }
 }
 
 void Stepper::step(bool forward) {

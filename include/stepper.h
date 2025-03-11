@@ -8,7 +8,7 @@
 
 class Stepper {
 public:
-    Stepper(int pin0, int pin1, int pin2, int pin3, int enable);
+    Stepper(int pin0, int pin1, int pin2, int pin3, int enable = 0);
     void turnQuart(bool forward);
     void turnHalf();
     void turnSteps(int num, bool dir);

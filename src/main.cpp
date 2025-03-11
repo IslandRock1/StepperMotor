@@ -6,9 +6,13 @@
 #include "stepper.h"
 #include "timerStats.hpp"
 
-Stepper stepper{26, 27, 32, 33, 34};
+// 1A, 2A, 3A, 4A
+Stepper stepper0{16, 17, 21, 18};
+Stepper stepper1{22, 27, 14, 13};
+Stepper stepper2{26, 25, 32, 33};
+
 TimerStats timerStats;
-int myID = 2;
+int myID = 1;
 
 typedef struct StepperData {
     byte version;
@@ -21,12 +25,19 @@ StepperData myData;
 void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     memcpy(&myData, incomingData, sizeof(myData));
 
-    if (myData.version != 0) {
+    if (myData.version != 1) {
         Serial.println("Wrong ESP_NOW version. main.cpp/OnDataRecv");
     }
 
-    if (myData.motorID != myID) {
-        Serial.println("Turning different motor.");
+    auto idRecieved = myData.motorID / 16;
+    if (idRecieved != myID) {
+        Serial.println("Turning with different PCB");
+        return;
+    }
+
+    auto motorReceived = myData.motorID % 16;
+    if ((motorReceived < 1) || (motorReceived > 3)) {
+        Serial.println("Not a valid motor");
         return;
     }
 
@@ -39,7 +50,27 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     Serial.print(" | Steps: ");
     Serial.println(steps);
 
-    stepper.turnSteps(steps, dir);
+    switch (motorReceived) {
+        case 1:
+        {
+            stepper0.turnSteps(steps, dir);
+        } break;
+
+        case 2:
+        {
+            stepper1.turnSteps(steps, dir);
+        } break;
+
+        case 3:
+        {
+            stepper2.turnSteps(steps, dir);
+        } break;
+
+        default:
+        {
+            Serial.println("Somehow did not detect invalid motor earlier.");
+        }
+    }
 }
 
 uint8_t baseMac[6];
@@ -50,6 +81,9 @@ void setup() {
 
     WiFi.mode(WIFI_STA);
     esp_err_t ret = esp_wifi_get_mac(WIFI_IF_STA, baseMac);
+    if (ret != ESP_OK) {
+        Serial.println("Failed to get MAC adress.");
+    }
 
     if (esp_now_init() != ESP_OK) {
         Serial.println("Error with ESP Now.");
