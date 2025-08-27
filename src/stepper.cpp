@@ -70,23 +70,31 @@ void Stepper::step(bool forward) {
     }
 }
 
-void Stepper::turnQuart(bool forward) {
-    for (int w = 0; w < 200; w++){
-        step(forward);
-        delay(pauseTime);
-    }
-}
-
-void Stepper::turnHalf() {
-    for (int w = 0; w < 400; w++) {
-        step(true);
-        delay(pauseTime);
-    }
-}
-
 void Stepper::turnSteps(int num, bool dir) {
-    for (int w = 0; w < num; w++) {
-        step(dir);
-        delay(pauseTime);
+    remaining_steps = num;
+    finished_steps = 0;
+    direction = dir;
+    current_acceleration_step = 0;
+    last_step_time = micros();
+}
+
+void Stepper::update() {
+    if (remaining_steps == 0) {return;}
+
+    double delay_time;
+    if (finished_steps < acceleration_steps) {
+        delay_time = start_step_time - acceleration * finished_steps;
+    } else if (remaining_steps < acceleration_steps) {
+        delay_time = start_step_time - acceleration * remaining_steps;
+    } else {
+        delay_time = minimum_step_time;
+    }
+
+    if (micros() - last_step_time > delay_time) {
+        step(direction);
+        last_step_time = micros();
+
+        finished_steps++;
+        remaining_steps--;
     }
 }
