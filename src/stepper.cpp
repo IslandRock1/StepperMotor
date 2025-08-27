@@ -16,7 +16,7 @@ Stepper::Stepper(int pin0, int pin1, int pin2, int pin3, int enable)
     }
 }
 
-void Stepper::step(bool forward) {
+void Stepper::step(const bool forward) {
 
     if (forward) {
         currentStep++;
@@ -70,7 +70,7 @@ void Stepper::step(bool forward) {
     }
 }
 
-void Stepper::turnSteps(int num, bool dir) {
+void Stepper::turnSteps(const int num, const bool dir) {
     remaining_steps = num;
     finished_steps = 0;
     direction = dir;
@@ -98,3 +98,20 @@ void Stepper::update() {
         remaining_steps--;
     }
 }
+
+bool Stepper::isFinished() const {
+    return (remaining_steps == 0);
+}
+
+void Stepper::setAccelerationSteps(int value) {
+    acceleration_steps = value;
+}
+
+void Stepper::setStartStepTime(int value) {
+    start_step_time = value;
+}
+
+void Stepper::setMinStepTime(int value) {
+    minimum_step_time = value;
+}
+

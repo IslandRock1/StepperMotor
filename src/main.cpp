@@ -18,6 +18,9 @@ typedef struct StepperData {
     byte version;
     byte motorID;
     byte data;
+    byte acceleration_steps;
+    byte start_time_div20;
+    byte min_time_div20;
 } StepperData;
 
 StepperData myData;
@@ -25,7 +28,7 @@ StepperData myData;
 void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     memcpy(&myData, incomingData, sizeof(myData));
 
-    if (myData.version != 1) {
+    if (myData.version != 2) {
         Serial.println("Wrong ESP_NOW version. main.cpp/OnDataRecv");
     }
 
@@ -49,6 +52,18 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     Serial.print(dir);
     Serial.print(" | Steps: ");
     Serial.println(steps);
+
+    stepper0.setAccelerationSteps(myData.acceleration_steps);
+    stepper1.setAccelerationSteps(myData.acceleration_steps);
+    stepper2.setAccelerationSteps(myData.acceleration_steps);
+
+    stepper0.setStartStepTime(myData.start_time_div20 * 20);
+    stepper1.setStartStepTime(myData.start_time_div20 * 20);
+    stepper2.setStartStepTime(myData.start_time_div20 * 20);
+
+    stepper0.setMinStepTime(myData.min_time_div20 * 20);
+    stepper1.setMinStepTime(myData.min_time_div20 * 20);
+    stepper2.setMinStepTime(myData.min_time_div20 * 20);
 
     switch (motorReceived) {
         case 1:
@@ -95,6 +110,10 @@ void setup() {
 
 unsigned long prevPrintTime = millis();
 void loop() {
+    stepper0.update();
+    stepper1.update();
+    stepper2.update();
+
     if (prevPrintTime + 500 < millis()) {
         prevPrintTime = millis();
 

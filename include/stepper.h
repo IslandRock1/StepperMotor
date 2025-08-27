@@ -2,14 +2,16 @@
 #ifndef STEPPERMOTOR_STEPPER_H
 #define STEPPERMOTOR_STEPPER_H
 
-#include <Arduino.h>
-
 class Stepper {
 public:
     Stepper(int pin0, int pin1, int pin2, int pin3, int enable = 0);
     void turnSteps(int num, bool dir);
     void update();
-    bool isFinished();
+    bool isFinished() const;
+
+    void setAccelerationSteps(int value);
+    void setStartStepTime(int value);
+    void setMinStepTime(int value);
 
 private:
     int pin0;
@@ -22,7 +24,7 @@ private:
 
     double start_step_time = 5000;
     double minimum_step_time = 3000;
-    double acceleration_steps = 100;
+    double acceleration_steps = 15;
 
     double acceleration = (start_step_time - minimum_step_time) / acceleration_steps;
     double current_acceleration_step = 0;
