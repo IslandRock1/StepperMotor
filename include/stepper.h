@@ -1,6 +1,3 @@
-//
-// Created by Øystein Bringsli.
-//
 
 #ifndef STEPPERMOTOR_STEPPER_H
 #define STEPPERMOTOR_STEPPER_H
