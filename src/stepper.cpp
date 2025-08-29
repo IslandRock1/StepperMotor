@@ -90,12 +90,20 @@ void Stepper::update() {
         delay_time = minimum_step_time;
     }
 
-    if (micros() - last_step_time > delay_time) {
-        step(direction);
-        last_step_time = micros();
+    auto now = micros();
+    if (now - last_step_time > delay_time) {
+        Serial.print("Delay: ");
+        Serial.print(delay_time);
+        Serial.print(" | Finished steps: ");
+        Serial.print(finished_steps);
+        Serial.print(" | Remaining steps: ");
+        Serial.println(remaining_steps);
 
+        last_step_time = now;
         finished_steps++;
         remaining_steps--;
+
+        step(direction);
     }
 }
 
@@ -105,13 +113,20 @@ bool Stepper::isFinished() const {
 
 void Stepper::setAccelerationSteps(int value) {
     acceleration_steps = value;
+    updateAcceleration();
 }
 
 void Stepper::setStartStepTime(int value) {
     start_step_time = value;
+    updateAcceleration();
 }
 
 void Stepper::setMinStepTime(int value) {
     minimum_step_time = value;
+    updateAcceleration();
+}
+
+void Stepper::updateAcceleration() {
+    acceleration = (start_step_time - minimum_step_time) / acceleration_steps;
 }
 

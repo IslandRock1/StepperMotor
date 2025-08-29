@@ -12,6 +12,9 @@ public:
     void setAccelerationSteps(int value);
     void setStartStepTime(int value);
     void setMinStepTime(int value);
+    void updateAcceleration();
+
+    unsigned long starting_time = 0;
 
 private:
     int pin0;
@@ -34,7 +37,6 @@ private:
     double current_time = start_step_time;
     bool direction = false;
     unsigned long last_step_time = 0;
-
 
     void step(bool forward);
 };
