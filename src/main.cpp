@@ -51,9 +51,9 @@ void OnDataRecv() {
     Serial.print(" | Steps: ");
     Serial.println(steps);
 
-    stepper0.setAccelerationSteps(retrieving_data.acceleration_steps);
-    stepper1.setAccelerationSteps(retrieving_data.acceleration_steps);
-    stepper2.setAccelerationSteps(retrieving_data.acceleration_steps);
+    stepper0.setAccelerationDegrees(retrieving_data.acceleration_steps);
+    stepper1.setAccelerationDegrees(retrieving_data.acceleration_steps);
+    stepper2.setAccelerationDegrees(retrieving_data.acceleration_steps);
 
     stepper0.setStartStepTime(retrieving_data.start_time_div);
     stepper1.setStartStepTime(retrieving_data.start_time_div);
@@ -101,9 +101,9 @@ void debugTest(bool dir) {
     retrieving_data.start_time_div = 250;
     retrieving_data.min_time_div = 250;
 
-    stepper0.setAccelerationSteps(retrieving_data.acceleration_steps);
-    stepper1.setAccelerationSteps(retrieving_data.acceleration_steps);
-    stepper2.setAccelerationSteps(retrieving_data.acceleration_steps);
+    stepper0.setAccelerationDegrees(retrieving_data.acceleration_steps);
+    stepper1.setAccelerationDegrees(retrieving_data.acceleration_steps);
+    stepper2.setAccelerationDegrees(retrieving_data.acceleration_steps);
 
     stepper0.setStartStepTime(retrieving_data.start_time_div * 40);
     stepper1.setStartStepTime(retrieving_data.start_time_div * 40);

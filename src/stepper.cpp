@@ -2,17 +2,18 @@
 #include <Arduino.h>
 #include "stepper.h"
 
-Stepper::Stepper(int pin0, int pin1, int pin2, int pin3, int enable)
-    :pin0(pin0), pin1(pin1), pin2(pin2), pin3(pin3), enablePin(enable) {
+Stepper::Stepper(const Pinout &pinout)
+    : enable_pins({pinout.enable0, pinout.enable1, pinout.enable2}),
+    motor_pins({pinout.pin0, pinout.pin1, pinout.pin2, pinout.pin3}){
 
-    pinMode(pin0, OUTPUT);
-    pinMode(pin1, OUTPUT);
-    pinMode(pin2, OUTPUT);
-    pinMode(pin3, OUTPUT);
+    for (const auto &p : motor_pins) {
+        pinMode(p, OUTPUT);
+        digitalWrite(p, LOW);
+    }
 
-    if (enablePin != 0) {
-        pinMode(enablePin, OUTPUT);
-        digitalWrite(enablePin, HIGH);
+    for (const auto &p : enable_pins) {
+        pinMode(p, OUTPUT);
+        digitalWrite(p, LOW);
     }
 }
 
@@ -33,34 +34,34 @@ void Stepper::step(const bool forward) {
     switch (currentStep) {
         case 0:
         {
-            digitalWrite(pin0, HIGH);
-            digitalWrite(pin1, LOW);
-            digitalWrite(pin2, HIGH);
-            digitalWrite(pin3, LOW);
+            digitalWrite(motor_pins.at(0), HIGH);
+            digitalWrite(motor_pins.at(1), LOW);
+            digitalWrite(motor_pins.at(2), HIGH);
+            digitalWrite(motor_pins.at(3), LOW);
         } break;
 
         case 1:
         {
-            digitalWrite(pin0, LOW);
-            digitalWrite(pin1, HIGH);
-            digitalWrite(pin2, HIGH);
-            digitalWrite(pin3, LOW);
+            digitalWrite(motor_pins.at(0), LOW);
+            digitalWrite(motor_pins.at(1), HIGH);
+            digitalWrite(motor_pins.at(2), HIGH);
+            digitalWrite(motor_pins.at(3), LOW);
         } break;
 
         case 2:
         {
-            digitalWrite(pin0, LOW);
-            digitalWrite(pin1, HIGH);
-            digitalWrite(pin2, LOW);
-            digitalWrite(pin3, HIGH);
+            digitalWrite(motor_pins.at(0), LOW);
+            digitalWrite(motor_pins.at(1), HIGH);
+            digitalWrite(motor_pins.at(2), LOW);
+            digitalWrite(motor_pins.at(3), HIGH);
         } break;
 
         case 3:
         {
-            digitalWrite(pin0, HIGH);
-            digitalWrite(pin1, LOW);
-            digitalWrite(pin2, LOW);
-            digitalWrite(pin3, HIGH);
+            digitalWrite(motor_pins.at(0), HIGH);
+            digitalWrite(motor_pins.at(1), LOW);
+            digitalWrite(motor_pins.at(2), LOW);
+            digitalWrite(motor_pins.at(3), HIGH);
         } break;
 
         default:
@@ -70,22 +71,28 @@ void Stepper::step(const bool forward) {
     }
 }
 
-void Stepper::turnSteps(const int num, const bool dir) {
-    remaining_steps = num;
-    finished_steps = 0;
+void Stepper::turnDegrees(const int motor, const int degrees, const bool dir) {
+    remaining_degrees = degrees;
+    finished_degrees = 0;
     direction = dir;
-    current_acceleration_step = 0;
+    current_acceleration_degrees = 0;
     last_step_time = micros();
+
+    current_motor = motor;
+    for (const auto &p : enable_pins) {
+        digitalWrite(p, LOW);
+    }
+    digitalWrite(enable_pins.at(current_motor), HIGH);
 }
 
 void Stepper::update() {
-    if (remaining_steps == 0) {return;}
+    if (remaining_degrees == 0) {return;}
 
     double delay_time;
-    if (finished_steps < acceleration_steps) {
-        delay_time = start_step_time - acceleration * finished_steps;
-    } else if (remaining_steps < acceleration_steps) {
-        delay_time = start_step_time - acceleration * remaining_steps;
+    if (finished_degrees < acceleration_degrees) {
+        delay_time = start_step_time - acceleration * finished_degrees;
+    } else if (remaining_degrees < acceleration_degrees) {
+        delay_time = start_step_time - acceleration * remaining_degrees;
     } else {
         delay_time = minimum_step_time;
     }
@@ -95,24 +102,24 @@ void Stepper::update() {
         Serial.print("Delay: ");
         Serial.print(delay_time);
         Serial.print(" | Finished steps: ");
-        Serial.print(finished_steps);
+        Serial.print(finished_degrees);
         Serial.print(" | Remaining steps: ");
-        Serial.println(remaining_steps);
+        Serial.println(remaining_degrees);
 
         last_step_time = now;
-        finished_steps++;
-        remaining_steps--;
+        finished_degrees++;
+        remaining_degrees--;
 
         step(direction);
     }
 }
 
 bool Stepper::isFinished() const {
-    return (remaining_steps == 0);
+    return (remaining_degrees == 0);
 }
 
-void Stepper::setAccelerationSteps(int value) {
-    acceleration_steps = value;
+void Stepper::setAccelerationDegrees(int value) {
+    acceleration_degrees = value;
     updateAcceleration();
 }
 
@@ -127,6 +134,6 @@ void Stepper::setMinStepTime(int value) {
 }
 
 void Stepper::updateAcceleration() {
-    acceleration = (start_step_time - minimum_step_time) / acceleration_steps;
+    acceleration = (start_step_time - minimum_step_time) / acceleration_degrees;
 }
 
