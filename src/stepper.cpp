@@ -4,18 +4,26 @@
 
 Stepper::Stepper(const Pinout &pinout)
     : enable_pins({pinout.enable0, pinout.enable1, pinout.enable2}),
-    motor_pins({pinout.pin0, pinout.pin1, pinout.pin2, pinout.pin3}){
+      motor_pins({pinout.pin0, pinout.pin1, pinout.pin2, pinout.pin3}),
+      encoders{Encoder(pinout.scl0, pinout.sda0), Encoder(pinout.scl1, pinout.sda1), Encoder(pinout.scl2, pinout.sda2)}{
 
-    for (const auto &p : motor_pins) {
+    for (const auto &p: motor_pins) {
         pinMode(p, OUTPUT);
         digitalWrite(p, LOW);
     }
 
-    for (const auto &p : enable_pins) {
+    for (const auto &p: enable_pins) {
         pinMode(p, OUTPUT);
         digitalWrite(p, LOW);
     }
 }
+
+void Stepper::begin() const {
+    for (auto e : encoders) {
+        e.begin();
+    }
+}
+
 
 void Stepper::step(const bool forward) {
 
@@ -71,11 +79,16 @@ void Stepper::step(const bool forward) {
     }
 }
 
-void Stepper::turnDegrees(const int motor, const int degrees, const bool dir) {
-    remaining_degrees = degrees;
-    finished_degrees = 0;
+void Stepper::turn_off() const {
+    digitalWrite(motor_pins.at(0), LOW);
+    digitalWrite(motor_pins.at(1), LOW);
+    digitalWrite(motor_pins.at(2), LOW);
+    digitalWrite(motor_pins.at(3), LOW);
+}
+
+void Stepper::turnRotations(const int motor, const int rotations, const bool dir) {
+    target_rotation += rotations * (dir * 2 - 1);
     direction = dir;
-    current_acceleration_degrees = 0;
     last_step_time = micros();
 
     current_motor = motor;
@@ -86,7 +99,22 @@ void Stepper::turnDegrees(const int motor, const int degrees, const bool dir) {
 }
 
 void Stepper::update() {
-    if (remaining_degrees == 0) {return;}
+    current_rotation = encoders.at(current_motor).readRotation();
+
+    if (isFinished()) {
+        turn_off();
+        return;
+    }
+
+    // Cases
+
+    auto one_way = target_rotation - current_rotation;
+    auto other_way  = current_rotation - (target_rotation - 4096);
+    if (one_way < other_way) {
+        // Step down
+    } else {
+        // Step up
+    }
 
     double delay_time;
     if (finished_degrees < acceleration_degrees) {
@@ -115,11 +143,11 @@ void Stepper::update() {
 }
 
 bool Stepper::isFinished() const {
-    return (remaining_degrees == 0);
+    return abs(current_rotation - target_rotation) < 5;
 }
 
 void Stepper::setAccelerationDegrees(int value) {
-    acceleration_degrees = value;
+    acceleration_rotations = value;
     updateAcceleration();
 }
 
@@ -134,6 +162,6 @@ void Stepper::setMinStepTime(int value) {
 }
 
 void Stepper::updateAcceleration() {
-    acceleration = (start_step_time - minimum_step_time) / acceleration_degrees;
+    acceleration = (start_step_time - minimum_step_time) / acceleration_rotations;
 }
 

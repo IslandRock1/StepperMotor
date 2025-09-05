@@ -2,7 +2,8 @@
 #ifndef STEPPERMOTOR_STEPPER_H
 #define STEPPERMOTOR_STEPPER_H
 #include <array>
-#include <Wire.h>
+
+#include "Encoder.hpp"
 
 struct Pinout {
     int pin0;
@@ -13,14 +14,20 @@ struct Pinout {
     int enable0;
     int enable1;
     int enable2;
+
+    int sda0, scl0;
+    int sda1, scl1;
+    int sda2, scl2;
 };
 
 class Stepper {
 public:
     explicit Stepper(const Pinout &pinout);
-    void turnDegrees(int motor, int degrees, bool dir);
-    void calibrate(bool dir);
+    void begin() const;
     void update();
+
+    void turnRotations(int motor, int rotations, bool dir);
+    void calibrate(bool dir);
     bool isFinished() const;
 
     void setAccelerationDegrees(int value);
@@ -34,23 +41,24 @@ private:
     std::array<int, 3> enable_pins;
     std::array<int, 4> motor_pins;
 
+    std::array<Encoder, 3> encoders;
+
     int currentStep = 0;
     int current_motor = 0;
 
     double start_step_time = 5000;
     double minimum_step_time = 3000;
-    double acceleration_degrees = 15;
+    double acceleration_rotations = 500;
+    double acceleration = 0;
 
-    double acceleration = (start_step_time - minimum_step_time) / acceleration_degrees;
-    double current_acceleration_degrees = 0;
+    signed int target_rotation = 0;
+    signed int current_rotation = 0;
 
-    int goal_degrees = 0;
-    double remaining_degrees = 0;
-    double current_time = start_step_time;
     bool direction = false;
     unsigned long last_step_time = 0;
 
     void step(bool forward);
+    void turn_off() const;
 };
 
 
