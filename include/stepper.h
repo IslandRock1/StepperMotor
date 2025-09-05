@@ -5,7 +5,7 @@
 
 #include "Encoder.hpp"
 
-struct Pinout {
+struct StepperPinout {
     int pin0;
     int pin1;
     int pin2;
@@ -15,19 +15,18 @@ struct Pinout {
     int enable1;
     int enable2;
 
-    int sda0, scl0;
-    int sda1, scl1;
-    int sda2, scl2;
+    int sdl0, scl0;
+    int sdl1, scl1;
+    int sdl2, scl2;
 };
 
 class Stepper {
 public:
-    explicit Stepper(const Pinout &pinout);
-    void begin() const;
+    explicit Stepper(const StepperPinout &pinout);
+    void begin();
     void update();
 
-    void turnRotations(int motor, int rotations, bool dir);
-    void calibrate(bool dir);
+    void turnRotations(int motor, int rotations);
     bool isFinished() const;
 
     void setAccelerationDegrees(int value);
@@ -37,24 +36,28 @@ public:
 
     unsigned long starting_time = 0;
 
+    // Move to private
+    signed int target_rotation[3] = {541, 0, 0};
+    signed int current_rotation[3] = {0, 0, 0};
+
 private:
     std::array<int, 3> enable_pins;
     std::array<int, 4> motor_pins;
 
     std::array<Encoder, 3> encoders;
 
-    int currentStep = 0;
+    int currentStep[3] = {0, 0, 0};
     int current_motor = 0;
 
-    double start_step_time = 5000;
-    double minimum_step_time = 3000;
+    double start_step_time = 20000;
+    double minimum_step_time = 18000;
     double acceleration_rotations = 500;
     double acceleration = 0;
 
-    signed int target_rotation = 0;
-    signed int current_rotation = 0;
+    //target and current here
+    double prev_delay[3] = {10000, 10000, 10000};
 
-    bool direction = false;
+    bool direction[3] = {false, false, false};
     unsigned long last_step_time = 0;
 
     void step(bool forward);

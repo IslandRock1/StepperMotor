@@ -10,7 +10,7 @@
 typedef struct StepperData {
 	byte version;
 	byte motorID;
-	byte data;
+	signed int rots;
 	int acceleration_steps;
 	int start_time_div;
 	int min_time_div;
