@@ -8,8 +8,8 @@
 // 1A, 2A, 3A, 4A
 StepperPinout motor_pin = {
     17, 16, 18, 21,
-    14, 0, 0,
-    25, 23, 0, 0, 0, 0
+    14, 13, 22,
+    25, 23, 26, 19, 27, 5
 };
 
 Stepper stepper{motor_pin};
