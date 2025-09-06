@@ -23,7 +23,7 @@ void OnDataRecv() {
         return;
     }
 
-    if (retrieving_data.version != 3) {
+    if (retrieving_data.version != 5) {
         Serial.println("Wrong ESP_NOW version. main.cpp/OnDataRecv");
         return;
     }
