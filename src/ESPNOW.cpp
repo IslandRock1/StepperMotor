@@ -19,16 +19,19 @@ void on_data_sent(const uint8_t* macAdr, const esp_now_send_status_t status) {
 void on_data_recv(const uint8_t* mac, const uint8_t* incomingData, int len) {
 	memcpy(&retrieving_data, incomingData, sizeof(retrieving_data));
 	recieved_new_data = true;
+
+	// Serial.println("Recieved data");
 }
 
 ESPNOW::ESPNOW() {
-	_peer_info.channel = 0;
+	_peer_info.channel = 11;
 	_peer_info.encrypt = false;
 	_base_mac;
 }
 
 void ESPNOW::begin() {
 	WiFi.mode(WIFI_STA);
+	esp_wifi_set_channel(11, WIFI_SECOND_CHAN_NONE);
 	if (esp_now_init() != ESP_OK) {
 		Serial.println("ESP_Now does not work..");
 	}
@@ -78,4 +81,8 @@ void ESPNOW::printAdr() const {
 
 StepperData ESPNOW::get_stepper_data() {
 	return stepper_data;
+}
+
+int16_t ESPNOW::calcChecksum() {
+	return (retrieving_data.version * retrieving_data.motorID * retrieving_data.rots * retrieving_data.packet_id);
 }

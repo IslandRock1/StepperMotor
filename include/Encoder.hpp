@@ -1,20 +1,26 @@
-
 #ifndef STEPPERMOTOR_ENCODER_HPP
 #define STEPPERMOTOR_ENCODER_HPP
 
+#include <Arduino.h>
+#include <Wire.h>
 
 class Encoder {
 public:
-    Encoder(int scl, int sda);
-    void begin();
-    int readRotation() const;
-private:
-    int address = 0x36;
-    int raw_angle_ms = 0x0C;
-    int raw_angle_ls = 0x0D;
+    Encoder(int scl, int sda, int A, int B);
 
-    int scl;
-    int sda;
+    void begin();
+    int readRotation(int motor); // motor = 0, 1, or 2
+
+private:
+    static constexpr uint8_t ADDRESS = 0x36;
+    static constexpr uint8_t RAW_ANGLE_MSB = 0x0C;
+    static constexpr uint8_t RAW_ANGLE_LSB = 0x0D;
+    static constexpr uint16_t ANGLE_MASK = 0x0FFF; // 12-bit resolution
+
+    void switchEncoder(int motor);
+    bool readRawAngle(uint16_t &angle);
+
+    int scl_pin, sda_pin, pinA, pinB;
 };
 
 

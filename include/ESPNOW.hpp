@@ -8,17 +8,19 @@
 #include <esp_now.h>
 
 typedef struct StepperData {
-	byte version;
-	byte motorID;
-	signed int rots;
-	int acceleration_steps;
-	int start_time_div;
-	int min_time_div;
+	uint16_t version;
+	uint16_t motorID;
+	int32_t rots;
+	uint16_t acceleration_steps;
+	uint16_t start_time;
+	uint16_t min_time;
+	uint16_t precision_rots;
 
-	byte is_finished;
-	byte NO_MOVE;
-	int packet_id;
-	byte motor_signature_id;
+	uint16_t is_finished;
+	uint16_t NO_MOVE;
+	uint32_t packet_id;
+	uint16_t motor_signature_id;
+	int16_t checksum;
 } StepperData;
 
 extern StepperData stepper_data;
@@ -39,8 +41,10 @@ public:
 	static void reset_is_new_data();
 	static StepperData get_stepper_data();
 
+	static int16_t calcChecksum();
+
 private:
-	std::array<uint8_t, 6> _address{168, 66, 227, 174, 228, 4};
+	std::array<uint8_t, 6> _address{168, 66, 227, 174, 228, 4}; //
 	esp_now_peer_info _peer_info;
 	uint8_t _base_mac[6];
 	bool _is_finished = true;

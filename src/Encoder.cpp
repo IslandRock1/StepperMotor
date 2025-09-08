@@ -1,29 +1,108 @@
-
-#include <Arduino.h>
-#include <Wire.h>
 #include "Encoder.hpp"
+#include <Wire.h>
 
-Encoder::Encoder(int scl, int sda)
-    : scl(scl), sda(sda) {}
+#include "ESPNOW.hpp"
+
+Encoder::Encoder(const int scl, const int sda, const int A, const int B)
+    : scl_pin(scl), sda_pin(sda), pinA(A), pinB(B) {
+}
 
 void Encoder::begin() {
-    Wire.begin(sda, scl);
+    pinMode(pinA, OUTPUT);
+    pinMode(pinB, OUTPUT);
+    digitalWrite(pinA, LOW);
+    digitalWrite(pinB, LOW);
+
+    // Initialize I2C only once
+    Wire.begin(sda_pin, scl_pin);
+    Wire.setClock(100000); // 100kHz standard speed
+
+    Serial.print("Clock pin: ");
+    Serial.println(scl_pin);
+
+    // Allow time for devices to power up
+    // delay(10);
 }
 
-int Encoder::readRotation() const {
-    Wire.beginTransmission(address);
-    Wire.write(raw_angle_ms);
-    Wire.endTransmission(false);  // Repeated start
-    Wire.requestFrom(address, 2);
+void Encoder::switchEncoder(int motor) {
+    if (my_id == 1) {
+        switch(motor) {
+            case 1:
+                digitalWrite(pinA, LOW);
+                digitalWrite(pinB, LOW);
+                break;
+            case 2:
+                digitalWrite(pinA, LOW);
+                digitalWrite(pinB, HIGH);
+                break;
+            case 0:
+                digitalWrite(pinA, HIGH);
+                digitalWrite(pinB, LOW);
+                break;
+            default:
+                Serial.println("Invalid encoder selected.");
+                return;
+        }
+    } else {
+        switch(motor) {
+            case 2:
+                digitalWrite(pinA, LOW);
+                digitalWrite(pinB, LOW);
+                break;
+            case 1:
+                digitalWrite(pinA, LOW);
+                digitalWrite(pinB, HIGH);
+                break;
+            case 0:
+                digitalWrite(pinA, HIGH);
+                digitalWrite(pinB, LOW);
+                break;
+            default:
+                Serial.println("Invalid encoder selected.");
+                return;
+        }
+    }
+    delayMicroseconds(100); // Increased settling time
+}
 
-    if (Wire.available() < 2) {
-        Serial.println("Error: Couldn't read angle");
-        return 0;
+bool Encoder::readRawAngle(uint16_t &angle) {
+    Wire.beginTransmission(ADDRESS);
+    Wire.write(RAW_ANGLE_MSB);
+    uint8_t error = Wire.endTransmission(false); // Repeated start
+
+    if (error != 0) {
+        Serial.print("I2C transmission error: ");
+        Serial.println(error);
+        return false;
     }
 
-    const uint8_t msb = Wire.read();
-    const uint8_t lsb = Wire.read();
+    uint8_t bytesRead = Wire.requestFrom(ADDRESS, (uint8_t)2);
+    if (bytesRead != 2) {
+        Serial.print("Incomplete data received. Expected 2, got ");
+        Serial.println(bytesRead);
+        return false;
+    }
 
-    return ((msb << 8) | lsb) & 0x0FFF;
+    uint8_t msb = Wire.read();
+    uint8_t lsb = Wire.read();
+
+    angle = ((msb << 8) | lsb) & ANGLE_MASK;
+    return true;
 }
 
+int Encoder::readRotation(int motor) {
+    if (motor < 0 || motor > 2) {
+        Serial.println("Invalid motor selection");
+        return -1; // Error value
+    }
+
+    switchEncoder(motor);
+
+    uint16_t rawAngle = 0;
+    if (!readRawAngle(rawAngle)) {
+        Serial.println("Failed to read angle");
+        return -1; // Error value
+    }
+
+    return rawAngle;
+}
