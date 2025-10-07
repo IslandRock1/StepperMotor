@@ -1,27 +1,23 @@
 #ifndef STEPPERMOTOR_ENCODER_HPP
 #define STEPPERMOTOR_ENCODER_HPP
 
-#include <Arduino.h>
 #include <Wire.h>
+#include <AS5600.h>
 
-class Encoder {
+class SensorAS5600 {
 public:
-    Encoder(int scl, int sda, int A, int B);
-
+    SensorAS5600(int SDA, int SCL, int bus_num);
     void begin();
-    int readRotation(int motor); // motor = 0, 1, or 2
+    int32_t getCumulativePosition();
+    void resetCumulativePosition();
 
+    static constexpr double RAW_TO_RAD = 2.0 * 3.1415926 / 4096.0;
+    static constexpr double RAW_TO_DEG = 360.0 / 4096.0;
 private:
-    static constexpr uint8_t ADDRESS = 0x36;
-    static constexpr uint8_t RAW_ANGLE_MSB = 0x0C;
-    static constexpr uint8_t RAW_ANGLE_LSB = 0x0D;
-    static constexpr uint16_t ANGLE_MASK = 0x0FFF; // 12-bit resolution
-
-    void switchEncoder(int motor);
-    bool readRawAngle(uint16_t &angle);
-
-    int scl_pin, sda_pin, pinA, pinB;
+    AS5600 _sensor;
+    int _sda;
+    int _scl;
+    TwoWire _wire;
 };
-
 
 #endif //STEPPERMOTOR_ENCODER_HPP

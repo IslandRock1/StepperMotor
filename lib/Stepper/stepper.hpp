@@ -10,13 +10,8 @@ struct StepperPinout {
     int pin1;
     int pin2;
     int pin3;
-
-    int enable0;
-    int enable1;
-    int enable2;
-
-    int sdl, scl;
-    int A, B;
+    int enable;
+    int sdl, scl, BUS_NUM;
 };
 
 class Stepper {
@@ -25,43 +20,58 @@ public:
     void begin();
     void update();
 
-    void turnRotations(int motor, int rotations);
-    bool isFinished() const;
+    void turnRotations(int rotations);
 
     void setAccelerationDegrees(int value);
     void setStartStepTime(int value);
     void setMinStepTime(int value);
-    void setPrecisionRots(int value);
     void updateAcceleration();
 
-    unsigned long starting_time = 0;
+    void setHome();
 
-    // Move to private
-    signed int target_rotation[3] = {};
-    signed int current_rotation[3] = {};
-    signed int publicDiff[3] = {};
-    int current_motor = 0;
+    unsigned long starting_time = 0;
+    unsigned long totTime = 0;
+    signed int publicDiff = 0;
+    bool active = false;
+
+    // Start time | Min time | Accel rots | Tot time
+    //   50000.00 | 40000.00 |     500.00 |  2429942
+    //   40000.00 | 30000.00 |     500.00 |  1878888
+    //   30000.00 | 20000.00 |     500.00 |  1332846
+    //   20000.00 | 10000.00 |     500.00 |   775964 (Sub 1 second)
+    //   10000.00 |  8000.00 |     500.00 |   497478 (0.5 Seconds)
+    //   10000.00 |  8000.00 |     300.00 |   470327
+    //    9000.00 |  8000.00 |     300.00 |   437500
+    //    8000.00 |  8000.00 |     300.00 |   421801
+    //    7000.00 |  7000.00 |     300.00 |   397247
+    //    6000.00 |  6000.00 |     300.00 |   328214 (Sub 1/3 second)
+    //    5000.00 |  5000.00 |     300.00 |   296440
+    //    5000.00 |  4000.00 |     300.00 |   291728
+    //    5000.00 |  4000.00 |     500.00 |   289883 (ish 200 rpm)
+
+    double start_step_time        = 5000;
+    double minimum_step_time      = 4000;
+    double acceleration_rotations =  500;
 
 private:
-    std::array<int, 3> enable_pins;
-    std::array<int, 4> motor_pins;
+    int _enable_pin;
+    std::array<int, 4> _motor_pins;
 
-    Encoder encoder;
+    SensorAS5600 _encoder;
 
-    int currentStep[3] = {0, 0, 0};
-    //int current_motor = 0;
+    int currentStep = 0;
 
-    double start_step_time = 50000;
-    double minimum_step_time = 40000;
-    double acceleration_rotations = 500;
-    int precision_rots = 50;
+    int outerHysterese = 50;
+    int innerHysterese =  3;
     double acceleration = 0;
 
     //target and current here
-    double prev_delay[3] = {10000, 10000, 10000};
+    signed int target_rotation = 0;
+    signed int current_rotation = 0;
+    double prev_delay = 10000;
     unsigned long last_encoder_read = 0;
 
-    bool direction[3] = {false, false, false};
+    bool direction = false;
     unsigned long last_step_time = 0;
 
     void step(bool forward);

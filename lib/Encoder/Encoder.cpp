@@ -1,108 +1,35 @@
+
 #include "Encoder.hpp"
-#include <Wire.h>
 
-#include "ESPNOW.hpp"
+SensorAS5600::SensorAS5600(const int sda, const int scl, int bus_num)
+    : _sda(sda), _scl(scl), _wire(bus_num) {}
 
-Encoder::Encoder(const int scl, const int sda, const int A, const int B)
-    : scl_pin(scl), sda_pin(sda), pinA(A), pinB(B) {
-}
 
-void Encoder::begin() {
-    pinMode(pinA, OUTPUT);
-    pinMode(pinB, OUTPUT);
-    digitalWrite(pinA, LOW);
-    digitalWrite(pinB, LOW);
+void SensorAS5600::begin() {
+    _wire.begin(_sda, _scl);
+    _sensor = AS5600{&_wire};
 
-    // Initialize I2C only once
-    Wire.begin(sda_pin, scl_pin);
-    Wire.setClock(100000); // 100kHz standard speed
+    Serial.print("SDA: ");
+    Serial.print(_sda);
+    Serial.print(" | SCL: ");
+    Serial.print(_scl);
 
-    Serial.print("Clock pin: ");
-    Serial.println(scl_pin);
-
-    // Allow time for devices to power up
-    // delay(10);
-}
-
-void Encoder::switchEncoder(int motor) {
-    if (my_id == 1) {
-        switch(motor) {
-            case 1:
-                digitalWrite(pinA, LOW);
-                digitalWrite(pinB, LOW);
-                break;
-            case 2:
-                digitalWrite(pinA, LOW);
-                digitalWrite(pinB, HIGH);
-                break;
-            case 0:
-                digitalWrite(pinA, HIGH);
-                digitalWrite(pinB, LOW);
-                break;
-            default:
-                Serial.println("Invalid encoder selected.");
-                return;
-        }
-    } else {
-        switch(motor) {
-            case 2:
-                digitalWrite(pinA, LOW);
-                digitalWrite(pinB, LOW);
-                break;
-            case 1:
-                digitalWrite(pinA, LOW);
-                digitalWrite(pinB, HIGH);
-                break;
-            case 0:
-                digitalWrite(pinA, HIGH);
-                digitalWrite(pinB, LOW);
-                break;
-            default:
-                Serial.println("Invalid encoder selected.");
-                return;
+    auto t0 = millis();
+    if (!_sensor.isConnected()) {Serial.print("Connecting to sensor.");}
+    while (!_sensor.isConnected()) {
+        if (millis() - t0 > 1000) {
+            t0 = millis();
+            Serial.println(".");
         }
     }
-    delayMicroseconds(100); // Increased settling time
+    Serial.println();
+    Serial.println("Sensor found!");
 }
 
-bool Encoder::readRawAngle(uint16_t &angle) {
-    Wire.beginTransmission(ADDRESS);
-    Wire.write(RAW_ANGLE_MSB);
-    uint8_t error = Wire.endTransmission(false); // Repeated start
-
-    if (error != 0) {
-        Serial.print("I2C transmission error: ");
-        Serial.println(error);
-        return false;
-    }
-
-    uint8_t bytesRead = Wire.requestFrom(ADDRESS, (uint8_t)2);
-    if (bytesRead != 2) {
-        Serial.print("Incomplete data received. Expected 2, got ");
-        Serial.println(bytesRead);
-        return false;
-    }
-
-    uint8_t msb = Wire.read();
-    uint8_t lsb = Wire.read();
-
-    angle = ((msb << 8) | lsb) & ANGLE_MASK;
-    return true;
+int32_t SensorAS5600::getCumulativePosition() {
+    return _sensor.getCumulativePosition();
 }
 
-int Encoder::readRotation(int motor) {
-    if (motor < 0 || motor > 2) {
-        Serial.println("Invalid motor selection");
-        return -1; // Error value
-    }
-
-    switchEncoder(motor);
-
-    uint16_t rawAngle = 0;
-    if (!readRawAngle(rawAngle)) {
-        Serial.println("Failed to read angle");
-        return -1; // Error value
-    }
-
-    return rawAngle;
+void SensorAS5600::resetCumulativePosition() {
+    _sensor.resetCumulativePosition();
 }
