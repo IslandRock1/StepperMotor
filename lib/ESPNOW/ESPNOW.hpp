@@ -4,7 +4,6 @@
 
 
 #include <Arduino.h>
-#include <WiFi.h>
 #include <esp_now.h>
 
 typedef struct StepperData {

@@ -1,6 +1,3 @@
-//
-// Created by Øystein Bringsli.
-//
 
 #ifndef STEPPERMOTOR_TIMERSTATS_HPP
 #define STEPPERMOTOR_TIMERSTATS_HPP
