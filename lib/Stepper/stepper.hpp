@@ -1,8 +1,8 @@
 
 #ifndef STEPPERMOTOR_STEPPER_H
 #define STEPPERMOTOR_STEPPER_H
-#include <array>
 
+#include <array>
 #include "Encoder.hpp"
 
 struct StepperPinout {

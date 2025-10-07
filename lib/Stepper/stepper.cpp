@@ -1,6 +1,6 @@
 
 #include <Arduino.h>
-#include "stepper.h"
+#include "stepper.hpp"
 
 #include "ESPNOW.hpp"
 

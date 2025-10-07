@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 
-#include "stepper.h"
+#include "stepper.hpp"
 #include "timerStats.hpp"
 #include "ESPNOW.hpp"
 

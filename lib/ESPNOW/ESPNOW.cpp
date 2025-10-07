@@ -3,7 +3,6 @@
 #include <esp_wifi.h>
 
 #include "ESPNOW.hpp"
-#include "stepper.h"
 
 StepperData stepper_data;
 StepperData retrieving_data;
