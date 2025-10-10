@@ -14,6 +14,9 @@ typedef struct StepperData {
 	uint16_t min_time;
 	uint16_t precision_rots;
 
+	uint16_t outerHysterese;
+	uint16_t innerHysterese;
+
 	uint16_t is_finished;
 	uint16_t NO_MOVE;
 	uint32_t packet_id;

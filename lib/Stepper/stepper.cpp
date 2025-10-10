@@ -103,11 +103,11 @@ void Stepper::turnRotations(const int motor, const int rotations) {
     Serial.print(target_rotation[motor]);
     Serial.print(" | New: ");
     target_rotation[motor] += rotations;
-    if (target_rotation[motor] < 0) {
-        target_rotation[motor] += 4096;
-    } else if (target_rotation[motor] > 4095) {
-        target_rotation[motor] -= 4096;
-    }
+    // if (target_rotation[motor] < 0) {
+    //     target_rotation[motor] += 4096;
+    // } else if (target_rotation[motor] > 4095) {
+    //     target_rotation[motor] -= 4096;
+    // }
     Serial.print(target_rotation[motor]);
     Serial.print(" | Motor: ");
     Serial.println(motor);
@@ -119,7 +119,7 @@ void Stepper::update() {
     int diff[3] = {};
 
     for (int i = 0; i < 3; i++) {
-        current_rotation[i] = encoder.readRotation(i);
+        current_rotation[i] = encoder.getCumPosition(i);
 
         diff[i] = target_rotation[i] - current_rotation[i];
 
@@ -130,6 +130,14 @@ void Stepper::update() {
         }
 
         publicDiff[i] = diff[i];
+
+        if (abs(diff[i]) > outerHysterese) {
+            active[i] = true;
+        }
+
+        if (abs(diff[i]) < innerHysterese) {
+            active[i] = false;
+        }
     }
 
     if (isFinished()) {
@@ -138,17 +146,20 @@ void Stepper::update() {
     }
 
     bool directionLoc;
-    if ((abs(diff[0]) > abs(diff[1])) && (abs(diff[0]) > abs(diff[2]))) {
+    if ((abs(diff[0]) > abs(diff[1])) && (abs(diff[0]) > abs(diff[2])) && active[0]) {
         current_motor = 0;
-    } else if (abs(diff[1]) > abs(diff[2])) {
+    } else if (abs(diff[1]) > abs(diff[2]) && active[1]) {
         current_motor = 1;
-    } else {
+    } else if (active[2]) {
         current_motor = 2;
+    } else {
+        turn_off();
+        return;
     }
 
     if (my_id == 1) {
         if (current_motor == 0) {
-            directionLoc = diff[current_motor] > 0;
+            directionLoc = diff[current_motor] < 0;
         } else if (current_motor == 1) {
             directionLoc = diff[current_motor] < 0;
         } else {
@@ -164,6 +175,7 @@ void Stepper::update() {
         }
     }
 
+    return;
     for (const auto &p : enable_pins) {
         digitalWrite(p, LOW);
     }
@@ -196,8 +208,8 @@ void Stepper::update() {
 }
 
 bool Stepper::isFinished() const {
-    for (int i = 0; i < 3; i++) {
-        if (abs(current_rotation[i] - target_rotation[i]) > precision_rots) {
+    for (bool i : active) {
+        if (i) {
             return false;
         }
     }
@@ -227,5 +239,12 @@ void Stepper::setPrecisionRots(int value) {
 
 void Stepper::updateAcceleration() {
     acceleration = (start_step_time - minimum_step_time) / acceleration_rotations;
+}
+
+void Stepper::setHome() {
+    encoder.setCumPosition();
+    target_rotation[0] = 0;
+    target_rotation[1] = 0;
+    target_rotation[2] = 0;
 }
 

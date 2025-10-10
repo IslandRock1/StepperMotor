@@ -106,3 +106,53 @@ int Encoder::readRotation(int motor) {
 
     return rawAngle;
 }
+
+signed long long int Encoder::getCumPosition(int motor) {
+    if (motor < 0 || motor > 2) {
+        Serial.println("Invalid motor selection");
+        return -1; // Error value
+    }
+
+    switchEncoder(motor);
+
+    uint16_t rawAngle = 0;
+    if (!readRawAngle(rawAngle)) {
+        Serial.println("Failed to read angle");
+        return -1; // Error value
+    }
+
+    _lastReadAngle[motor] = rawAngle;
+    auto value = _lastReadAngle[motor];
+
+    //  whole rotation CW?
+    //  less than half a circle
+    if ((_lastPosition[motor] > 2048) && ( value < (_lastPosition[motor] - 2048)))
+    {
+        _position[motor] = _position[motor] + 4096 - _lastPosition[motor] + value;
+    }
+    //  whole rotation CCW?
+    //  less than half a circle
+    else if ((value > 2048) && ( _lastPosition[motor] < (value - 2048)))
+    {
+        _position[motor] = _position[motor] - 4096 - _lastPosition[motor] + value;
+    }
+    else
+    {
+        _position[motor] = _position[motor] - _lastPosition[motor] + value;
+    }
+    _lastPosition[motor] = value;
+
+    return _position[motor];
+}
+
+void Encoder::setCumPosition() {
+    for (int i = 0; i < 3; i++) {
+        switchEncoder(i);
+
+        uint16_t value;
+        readRawAngle(value);
+        _lastPosition[i] = value;
+        _position[i] = 0;
+    }
+}
+

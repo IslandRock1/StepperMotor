@@ -27,6 +27,7 @@ public:
 
     void turnRotations(int motor, int rotations);
     bool isFinished() const;
+    void setHome();
 
     void setAccelerationDegrees(int value);
     void setStartStepTime(int value);
@@ -42,6 +43,10 @@ public:
     signed int publicDiff[3] = {};
     int current_motor = 0;
 
+    bool active[3] = {false, false, false};
+    int outerHysterese = 50;
+    int innerHysterese = 3;
+
 private:
     std::array<int, 3> enable_pins;
     std::array<int, 4> motor_pins;
@@ -49,10 +54,9 @@ private:
     Encoder encoder;
 
     int currentStep[3] = {0, 0, 0};
-    //int current_motor = 0;
 
-    double start_step_time = 50000;
-    double minimum_step_time = 40000;
+    double start_step_time = 5000;
+    double minimum_step_time = 4000;
     double acceleration_rotations = 500;
     int precision_rots = 50;
     double acceleration = 0;

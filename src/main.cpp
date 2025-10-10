@@ -69,6 +69,9 @@ void OnDataRecv() {
     stepper.setMinStepTime(retrieving_data.min_time);
     stepper.setPrecisionRots(retrieving_data.precision_rots);
 
+    stepper.outerHysterese = retrieving_data.outerHysterese;
+    stepper.innerHysterese = retrieving_data.innerHysterese;
+
     stepper.turnRotations(motorReceived - 1, rots);
     stepper.starting_time = millis();
 }
@@ -81,6 +84,7 @@ void setup() {
 
     espnow.begin();
     stepper.begin();
+    stepper.setHome();
 }
 
 unsigned long prevPrintTime = millis();
@@ -116,6 +120,10 @@ void loop() {
         Serial.print(stepper.publicDiff[2]);
         Serial.print(" | Selected motor: ");
         Serial.print(stepper.current_motor);
+        Serial.print(" | Curr: ");
+        Serial.print(stepper.current_rotation[1]);
+        Serial.print(" | Target: ");
+        Serial.print(stepper.target_rotation[1]);
         Serial.print(" | Address: ");
         espnow.printAdr();
 
@@ -123,6 +131,7 @@ void loop() {
         if (debugMoveIter == 100) {
             debugMoveIter = 0;
             // stepper.turnRotations(0, 16, false);
+            stepper.turnRotations(0, 1024);
         }
     }
 }

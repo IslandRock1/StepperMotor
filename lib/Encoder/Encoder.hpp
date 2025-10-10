@@ -10,6 +10,8 @@ public:
 
     void begin();
     int readRotation(int motor); // motor = 0, 1, or 2
+    signed long long int getCumPosition(int motor);
+    void setCumPosition();
 
 private:
     static constexpr uint8_t ADDRESS = 0x36;
@@ -19,6 +21,11 @@ private:
 
     void switchEncoder(int motor);
     bool readRawAngle(uint16_t &angle);
+
+    signed long long int _lastReadAngle[3] = {0, 0, 0};
+    signed long long int _position[3] = {0, 0, 0};
+    signed long long int _lastPosition[3] = {0, 0, 0};
+
 
     int scl_pin, sda_pin, pinA, pinB;
 };
